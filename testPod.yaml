@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-env-demo-app
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      test-app: web
+  template:
+    metadata:
+      labels:
+        test-app: web
+    spec:
+      containers:
+        - name: test-env-app
+          image: test-env-app
+          imagePullPolicy: Never
+          env:
+            - name: CLIENT_ID  #This is the env variable that will appear in the container
+              valueFrom:
+                secretKeyRef:
+                  name: test-secrets #This is the name of the secrets object (testSecrets.yaml)
+                  key: client_id
+            - name: CLIENT_SECRET  #This is the env variable that will appear in the container
+              valueFrom:
+                secretKeyRef:
+                  name: test-secrets #This is the name of the secrets object (testSecrets.yaml)
+                  key: client_secret
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-app-entrypoint
+  namespace: default
+spec:
+  type: NodePort
+  selector:
+    test-app: web
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080
